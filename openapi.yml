@@ -1,0 +1,807 @@
+---
+openapi: 3.1.0
+info:
+  contact:
+    email: assessment@inc3.net
+    name: Assessment
+  description: Backend API for the Posts Explorer product
+  title: Posts Explorer API
+  version: 1.0.0
+servers:
+- url: http://localhost:8080
+  description: Local development server
+tags:
+- name: Admin Comments
+  description: Admin comment management endpoints
+- name: Admin Posts
+  description: Admin post management endpoints
+- name: Comments
+  description: Public comment endpoints
+- name: Posts
+  description: Public post endpoints
+- name: Tags
+  description: Public tag endpoints
+- name: Users
+  description: Public user endpoints
+components:
+  schemas:
+    CommentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        postId:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int64
+        commenterName:
+          type: string
+        body:
+          type: string
+        createdAt:
+          $ref: "#/components/schemas/Instant"
+        updatedAt:
+          $ref: "#/components/schemas/Instant"
+    CreateCommentRequest:
+      type: object
+      required:
+      - body
+      - commenterName
+      - userId
+      properties:
+        body:
+          type: string
+          pattern: \S
+        commenterName:
+          type: string
+          pattern: \S
+        userId:
+          type: integer
+          format: int64
+    CreatePostRequest:
+      type: object
+      required:
+      - title
+      - body
+      - userId
+      properties:
+        title:
+          type: string
+          pattern: \S
+        body:
+          type: string
+          pattern: \S
+        userId:
+          type: integer
+          format: int64
+        tagIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+        views:
+          type: integer
+          format: int32
+    Instant:
+      type: string
+      format: date-time
+      examples:
+      - 2022-03-10T16:15:50Z
+    PageResponseCommentResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CommentResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalItems:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        sort:
+          $ref: "#/components/schemas/SortInfo"
+    PageResponsePostResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PostResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalItems:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        sort:
+          $ref: "#/components/schemas/SortInfo"
+    PageResponsePostResponseAdmin:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PostResponseAdmin"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalItems:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        sort:
+          $ref: "#/components/schemas/SortInfo"
+    PageResponseUserResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalItems:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        sort:
+          $ref: "#/components/schemas/SortInfo"
+    PatchPostRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        body:
+          type: string
+        userId:
+          type: integer
+          format: int64
+        tagIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+        views:
+          type: integer
+          format: int32
+    PostDetailResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        body:
+          type: string
+        user:
+          $ref: "#/components/schemas/UserResponse"
+        tags:
+          type: array
+          items:
+            type: string
+        views:
+          type: integer
+          format: int32
+        commentsCount:
+          type: integer
+          format: int64
+        comments:
+          $ref: "#/components/schemas/PageResponseCommentResponse"
+        createdAt:
+          $ref: "#/components/schemas/Instant"
+        updatedAt:
+          $ref: "#/components/schemas/Instant"
+    PostResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        body:
+          type: string
+        user:
+          $ref: "#/components/schemas/UserResponse"
+        tags:
+          type: array
+          items:
+            type: string
+        views:
+          type: integer
+          format: int32
+        commentsCount:
+          type: integer
+          format: int64
+        createdAt:
+          $ref: "#/components/schemas/Instant"
+        updatedAt:
+          $ref: "#/components/schemas/Instant"
+    PostResponseAdmin:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        body:
+          type: string
+        user:
+          $ref: "#/components/schemas/UserResponse"
+        tags:
+          type: array
+          items:
+            type: string
+        views:
+          type: integer
+          format: int32
+        commentsCount:
+          type: integer
+          format: int64
+        createdAt:
+          $ref: "#/components/schemas/Instant"
+        updatedAt:
+          $ref: "#/components/schemas/Instant"
+        deleted:
+          type: boolean
+        deletedAt:
+          $ref: "#/components/schemas/Instant"
+    SortInfo:
+      type: object
+      properties:
+        field:
+          type: string
+        direction:
+          type: string
+    TagResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        slug:
+          type: string
+    UpdateCommentRequest:
+      type: object
+      required:
+      - body
+      properties:
+        body:
+          type: string
+          pattern: \S
+        commenterName:
+          type: string
+    UpdatePostRequest:
+      type: object
+      required:
+      - title
+      - body
+      - userId
+      properties:
+        title:
+          type: string
+          pattern: \S
+        body:
+          type: string
+          pattern: \S
+        userId:
+          type: integer
+          format: int64
+        tagIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+        views:
+          type: integer
+          format: int32
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        fullName:
+          type: string
+        email:
+          type: string
+        createdAt:
+          $ref: "#/components/schemas/Instant"
+        updatedAt:
+          $ref: "#/components/schemas/Instant"
+  securitySchemes:
+    SecurityScheme:
+      type: openIdConnect
+      openIdConnectUrl: http://localhost:8180/realms/posts-explorer/.well-known/openid-configuration
+      description: Authentication
+paths:
+  /api/admin/comments/{id}:
+    put:
+      summary: Update a comment
+      tags:
+      - Admin Comments
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCommentRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      security:
+      - SecurityScheme:
+        - posts-admin
+    delete:
+      summary: Soft-delete a comment
+      tags:
+      - Admin Comments
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme:
+        - posts-admin
+  /api/admin/posts:
+    get:
+      summary: List all posts including soft-deleted (admin)
+      tags:
+      - Admin Posts
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: search
+        in: query
+        schema:
+          type: string
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 10
+      - name: sortBy
+        in: query
+        schema:
+          type: string
+          default: id
+      - name: sortDir
+        in: query
+        schema:
+          type: string
+          default: ascending
+      - name: tag
+        in: query
+        schema:
+          type: string
+      - name: userId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponsePostResponseAdmin"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme:
+        - posts-admin
+    post:
+      summary: Create a new post
+      tags:
+      - Admin Posts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePostRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      security:
+      - SecurityScheme:
+        - posts-admin
+  /api/admin/posts/{id}:
+    put:
+      summary: Fully update a post
+      tags:
+      - Admin Posts
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePostRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      security:
+      - SecurityScheme:
+        - posts-admin
+    patch:
+      summary: Partially update a post
+      tags:
+      - Admin Posts
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchPostRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme:
+        - posts-admin
+    get:
+      summary: Get a post for editing (admin)
+      tags:
+      - Admin Posts
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseAdmin"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme:
+        - posts-admin
+    delete:
+      summary: Soft-delete a post
+      tags:
+      - Admin Posts
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme:
+        - posts-admin
+  /api/admin/posts/{id}/comments:
+    post:
+      summary: Create a comment on a post
+      tags:
+      - Admin Posts
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCommentRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      security:
+      - SecurityScheme:
+        - posts-admin
+  /api/comments:
+    get:
+      summary: List comments globally or by post
+      tags:
+      - Comments
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: postId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 10
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseCommentResponse"
+  /api/posts:
+    get:
+      summary: "List posts with pagination, search, filters, and sorting"
+      tags:
+      - Posts
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: search
+        in: query
+        schema:
+          type: string
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 10
+      - name: sortBy
+        in: query
+        schema:
+          type: string
+          default: id
+      - name: sortDir
+        in: query
+        schema:
+          type: string
+          default: ascending
+      - name: tag
+        in: query
+        schema:
+          type: string
+      - name: userId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponsePostResponse"
+  /api/posts/{id}:
+    get:
+      summary: "Get post detail with author, tags, reactions, views, and comments"
+      tags:
+      - Posts
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostDetailResponse"
+  /api/posts/{id}/comments:
+    get:
+      summary: List comments for a specific post
+      tags:
+      - Posts
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 10
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseCommentResponse"
+  /api/tags:
+    get:
+      summary: List all tags ordered by name
+      tags:
+      - Tags
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TagResponse"
+  /api/users:
+    get:
+      summary: List all users for the frontend user filter
+      tags:
+      - Users
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: search
+        in: query
+        schema:
+          type: string
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 10
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseUserResponse"
