@@ -52,6 +52,10 @@
            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-sm">
              A
            </div>
+           <button @click="handleLogout" class="text-sm font-medium text-slate-600 hover:text-slate-900 flex items-center gap-2 ml-2 transition-colors">
+             <LogOutIcon class="w-4 h-4" />
+             Logout
+           </button>
         </div>
       </header>
 
@@ -74,7 +78,18 @@ import {
   LayoutDashboard as LayoutDashboardIcon, 
   FileText as FileTextIcon, 
   MessageSquare as MessageSquareIcon,
-  Menu as MenuIcon
+  Menu as MenuIcon,
+  LogOut as LogOutIcon
 } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/shared/stores/authStore'
 import RightSidebar from './RightSidebar.vue'
+
+const router = useRouter()
+const authStore = useAuthStore()
+
+function handleLogout() {
+  authStore.logout()
+  router.push('/login')
+}
 </script>
