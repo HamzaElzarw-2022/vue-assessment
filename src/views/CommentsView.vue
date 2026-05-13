@@ -17,6 +17,14 @@
       v-else-if="commentsData" 
       :columns="columns" 
       :data="commentsData.data.items"
+      :pagination="{
+        page: commentsData.data.page,
+        size: commentsData.data.size,
+        totalItems: commentsData.data.totalItems,
+        totalPages: commentsData.data.totalPages
+      }"
+      @page-change="(p) => filters.page = p"
+      @size-change="(s) => { filters.size = s; filters.page = 0; }"
     >
       <template #cell-commenterName="{ row }">
         <div class="font-medium text-gray-900">{{ row.commenterName }}</div>
@@ -53,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { reactive } from 'vue'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { Plus as PlusIcon, Edit as EditIcon, Trash as TrashIcon } from 'lucide-vue-next'
 
@@ -64,15 +72,19 @@ import CommentForm from '@/features/comments/components/CommentForm.vue'
 
 import { useUiStore } from '@/shared/stores/uiStore'
 import { commentsApi } from '@/features/comments/api'
+import type { CommentFilterParams } from '@/features/comments/types'
 
 const uiStore = useUiStore()
 const queryClient = useQueryClient()
 
-const page = ref(0)
+const filters = reactive<CommentFilterParams>({
+  page: 0,
+  size: 20
+})
 
 const { data: commentsData, isLoading } = useQuery({
-  queryKey: ['comments', page],
-  queryFn: () => commentsApi.getComments({ page: page.value, size: 20 })
+  queryKey: ['comments', filters],
+  queryFn: () => commentsApi.getComments({ ...filters })
 })
 
 const deleteMutation = useMutation({

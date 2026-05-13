@@ -9,14 +9,18 @@
     </div>
 
     <!-- Search & Filters -->
-    <div class="mb-6 flex gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-      <BaseInput 
-        v-model="searchQuery" 
-        placeholder="Search posts..." 
-        class="w-64"
-        @input="handleSearch"
+    <BaseFilter v-model="filters.search">
+      <BaseCombobox 
+        v-model="filters.userId" 
+        v-model:search="userSearch"
+        :options="userOptions" 
+        placeholder="Filter by user..."
+        class="w-48" 
       />
-    </div>
+      <BaseSelect v-model="filters.tag" :options="tagOptions" class="w-32" />
+      <BaseSelect v-model="filters.sortBy" :options="sortOptions" class="w-36" />
+      <BaseSelect v-model="filters.sortDir" :options="sortDirOptions" class="w-32" />
+    </BaseFilter>
 
     <!-- Table -->
     <div v-if="isLoading" class="flex justify-center py-12">
@@ -27,6 +31,14 @@
       v-else-if="postsData" 
       :columns="columns" 
       :data="postsData.data.items"
+      :pagination="{
+        page: postsData.data.page,
+        size: postsData.data.size,
+        totalItems: postsData.data.totalItems,
+        totalPages: postsData.data.totalPages
+      }"
+      @page-change="(p) => { filters.page = p; }"
+      @size-change="(s) => { filters.size = s; filters.page = 0; }"
     >
       <template #cell-title="{ row }">
         <div class="font-medium text-gray-900">{{ row.title }}</div>
@@ -92,40 +104,101 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { Plus as PlusIcon, Edit as EditIcon, Trash as TrashIcon, Eye as EyeIcon } from 'lucide-vue-next'
 import debounce from 'lodash-es/debounce'
 
 import AdminLayout from '@/shared/components/AdminLayout.vue'
 import BaseButton from '@/shared/components/BaseButton.vue'
-import BaseInput from '@/shared/components/BaseInput.vue'
+import BaseSelect from '@/shared/components/BaseSelect.vue'
+import BaseCombobox from '@/shared/components/BaseCombobox.vue'
 import BaseTable, { type Column } from '@/shared/components/BaseTable.vue'
+import BaseFilter from '@/shared/components/BaseFilter.vue'
 import PostForm from '@/features/posts/components/PostForm.vue'
 import PostDetail from '@/features/posts/components/PostDetail.vue'
 
 import { useUiStore } from '@/shared/stores/uiStore'
 import { postsApi } from '@/features/posts/api'
+import { usersApi } from '@/features/users/api'
+import { tagsApi } from '@/features/tags/api'
+import type { PostFilterParams } from '@/features/posts/types'
 
 const uiStore = useUiStore()
 const queryClient = useQueryClient()
 
-const page = ref(0)
-const searchQuery = ref('')
-const activeSearch = ref('')
+const filters = reactive<PostFilterParams>({
+  page: 0,
+  size: 10,
+  search: '',
+  sortBy: 'id',
+  sortDir: 'ascending',
+  tag: '',
+  userId: undefined
+})
 
-// Debounce search input
-const handleSearch = debounce(() => {
-  activeSearch.value = searchQuery.value
-  page.value = 0
+const userSearch = ref('')
+const activeUserSearch = ref('')
+
+const handleUserSearch = debounce(() => {
+  activeUserSearch.value = userSearch.value
 }, 300)
 
+watch(userSearch, (newVal) => {
+  handleUserSearch()
+  if (!newVal) {
+    filters.userId = undefined
+  }
+})
+
+const { data: tagsData } = useQuery({
+  queryKey: ['tags'],
+  queryFn: () => tagsApi.getTags()
+})
+
+const { data: usersData } = useQuery({
+  queryKey: ['users', activeUserSearch],
+  queryFn: () => usersApi.getUsers({ size: 5, search: activeUserSearch.value || undefined })
+})
+
+const tagOptions = computed(() => {
+  const options = [{ label: 'All Tags', value: '' }]
+  if (tagsData.value?.data) {
+    tagsData.value.data.forEach((t: any) => options.push({ label: t.name, value: t.name }))
+  }
+  return options
+})
+
+const userOptions = computed(() => {
+  const options: { label: string, value: any }[] = []
+  if (usersData.value?.data?.items) {
+    usersData.value.data.items.forEach((u: any) => options.push({ label: u.fullName || u.username, value: u.id }))
+  }
+  return options
+})
+
+const sortOptions = [
+  { label: 'Sort by ID', value: 'id' },
+  { label: 'Sort by Views', value: 'views' },
+  { label: 'Sort by Date', value: 'createdAt' }
+]
+
+const sortDirOptions = [
+  { label: 'Ascending', value: 'ascending' },
+  { label: 'Descending', value: 'descending' }
+]
+
+watch(() => [filters.search, filters.size, filters.sortBy, filters.sortDir, filters.tag, filters.userId], () => {
+  filters.page = 0
+})
+
 const { data: postsData, isLoading } = useQuery({
-  queryKey: ['posts', page, activeSearch],
+  queryKey: ['posts', filters],
   queryFn: () => postsApi.getAdminPosts({ 
-    page: page.value, 
-    search: activeSearch.value || undefined,
-    size: 10
+    ...filters,
+    search: filters.search || undefined,
+    tag: filters.tag || undefined,
+    userId: filters.userId || undefined
   })
 })
 

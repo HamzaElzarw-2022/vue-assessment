@@ -3,15 +3,16 @@ import type {
   PageResponseCommentResponse, 
   CreateCommentRequest, 
   UpdateCommentRequest,
-  CommentResponse
+  CommentResponse,
+  CommentFilterParams
 } from '../types'
 
 export const commentsApi = {
-  getComments(params?: Record<string, any>) {
+  getComments(params?: CommentFilterParams) {
     return apiClient.get<PageResponseCommentResponse>('/comments', { params })
   },
 
-  getPostComments(postId: number, params?: Record<string, any>) {
+  getPostComments(postId: number, params?: CommentFilterParams) {
     return apiClient.get<PageResponseCommentResponse>(`/posts/${postId}/comments`, { params })
   },
 

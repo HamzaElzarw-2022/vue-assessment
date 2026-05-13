@@ -48,3 +48,13 @@ export interface PageResponse<T> {
 
 export type PageResponsePostResponseAdmin = PageResponse<PostResponseAdmin>
 export type PageResponsePostResponse = PageResponse<PostResponse>
+
+export interface PostFilterParams {
+  page?: number
+  search?: string
+  size?: number
+  sortBy?: string
+  sortDir?: 'ascending' | 'descending' | string
+  tag?: string
+  userId?: number
+}

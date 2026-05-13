@@ -22,3 +22,11 @@ export interface UpdateCommentRequest {
 }
 
 export type PageResponseCommentResponse = PageResponse<CommentResponse>
+
+export interface CommentFilterParams {
+  page?: number
+  size?: number
+  search?: string
+  sortBy?: string
+  sortDir?: 'ascending' | 'descending' | string
+}

@@ -3,11 +3,12 @@ import type {
   PageResponsePostResponseAdmin, 
   CreatePostRequest, 
   UpdatePostRequest,
-  PostResponseAdmin
+  PostResponseAdmin,
+  PostFilterParams
 } from '../types'
 
 export const postsApi = {
-  getAdminPosts(params?: Record<string, any>) {
+  getAdminPosts(params?: PostFilterParams) {
     return apiClient.get<PageResponsePostResponseAdmin>('/admin/posts', { params })
   },
   
