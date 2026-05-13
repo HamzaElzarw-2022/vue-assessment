@@ -2,6 +2,7 @@
   <form @submit.prevent="handleSubmit" class="space-y-6">
     <div v-if="!isEdit" class="space-y-6">
       <BaseSelect
+        v-if="!defaultPostId"
         v-model="formData.postId"
         id="postId"
         label="Post"
@@ -57,6 +58,7 @@ import type { CommentResponse, CreateCommentRequest, UpdateCommentRequest } from
 
 const props = defineProps<{
   comment?: CommentResponse
+  defaultPostId?: number
 }>()
 
 const emit = defineEmits(['close', 'success'])
@@ -65,7 +67,7 @@ const queryClient = useQueryClient()
 const isEdit = computed(() => !!props.comment)
 
 const formData = ref({
-  postId: '' as number | '',
+  postId: props.defaultPostId || ('' as number | ''),
   userId: '' as number | '',
   commenterName: '',
   body: ''

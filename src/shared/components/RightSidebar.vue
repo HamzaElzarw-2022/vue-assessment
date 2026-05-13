@@ -13,7 +13,7 @@
     <Transition name="slide-right">
       <div 
         v-if="uiStore.isSidebarOpen" 
-        class="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-xl z-50 flex flex-col h-full transform transition-transform duration-300"
+        class="fixed inset-y-0 right-0 w-full max-w-3xl bg-white shadow-xl z-50 flex flex-col h-full transform transition-transform duration-300"
       >
         <!-- Header -->
         <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">

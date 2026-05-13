@@ -37,21 +37,54 @@
       </div>
       
       <div class="pt-6 border-t border-slate-100">
-        <h3 class="text-lg font-semibold mb-4">Comments ({{ post.commentsCount }})</h3>
-        <!-- We could list comments here, but for now we just show the count to keep it simple -->
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold">Comments ({{ post.commentsCount }})</h3>
+          <BaseButton size="sm" @click="openCreateForm(post.id)">
+            <PlusIcon class="w-4 h-4 mr-1.5" />
+            Add Comment
+          </BaseButton>
+        </div>
+        
+        <div v-if="isLoadingComments" class="flex justify-center py-4">
+          <div class="w-6 h-6 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+        </div>
+        
+        <CommentsTable 
+          v-else-if="commentsData" 
+          :comments="commentsData.data.items"
+          :pagination="{
+            page: commentsData.data.page,
+            size: commentsData.data.size,
+            totalItems: commentsData.data.totalItems,
+            totalPages: commentsData.data.totalPages
+          }"
+          hide-post-column
+          @page-change="(p) => commentFilters.page = p"
+          @size-change="(s) => { commentFilters.size = s; commentFilters.page = 0; }"
+          @edit="openEditForm"
+          @delete="handleDelete"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, reactive, computed } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { postsApi } from '../api'
-import { AlertCircle as AlertCircleIcon } from 'lucide-vue-next'
+import { commentsApi } from '@/features/comments/api'
+import { useCommentActions } from '@/features/comments/composables/useCommentActions'
+import { AlertCircle as AlertCircleIcon, Plus as PlusIcon } from 'lucide-vue-next'
+import BaseButton from '@/shared/components/BaseButton.vue'
+import CommentsTable from '@/features/comments/components/CommentsTable.vue'
+import type { CommentFilterParams } from '@/features/comments/types'
 
 const props = defineProps<{
   postId: number
 }>()
+
+const { openCreateForm, openEditForm, handleDelete } = useCommentActions()
 
 const { data: postData, isLoading } = useQuery({
   queryKey: ['posts', props.postId],
@@ -60,5 +93,15 @@ const { data: postData, isLoading } = useQuery({
 })
 
 const post = computed(() => postData.value?.data)
-import { computed } from 'vue'
+
+const commentFilters = reactive<CommentFilterParams>({
+  page: 0,
+  size: 5
+})
+
+const { data: commentsData, isLoading: isLoadingComments } = useQuery({
+  queryKey: ['posts', props.postId, 'comments', commentFilters],
+  queryFn: () => commentsApi.getPostComments(props.postId, { ...commentFilters }),
+  enabled: !!props.postId
+})
 </script>
