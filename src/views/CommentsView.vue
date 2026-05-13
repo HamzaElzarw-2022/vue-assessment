@@ -2,7 +2,7 @@
   <AdminLayout>
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold text-gray-900">Comments Management</h1>
-      <BaseButton @click="openCreateForm">
+      <BaseButton @click="() => openCreateForm()">
         <PlusIcon class="w-4 h-4 mr-2" />
         New Comment
       </BaseButton>

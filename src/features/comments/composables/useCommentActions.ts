@@ -17,7 +17,10 @@ export function useCommentActions() {
   })
 
   function openCreateForm(defaultPostId?: number) {
-    uiStore.openSidebar('Create New Comment', CommentForm, { defaultPostId })
+    const postId = typeof defaultPostId === 'number' ? defaultPostId : undefined
+    uiStore.openSidebar('Create New Comment', CommentForm, {
+      ...(postId !== undefined ? { defaultPostId: postId } : {})
+    })
   }
 
   function openEditForm(comment: CommentResponse) {

@@ -1,12 +1,13 @@
 <template>
   <form @submit.prevent="handleSubmit" class="space-y-6">
     <div v-if="!isEdit" class="space-y-6">
-      <BaseSelect
+      <BaseInput
         v-if="!defaultPostId"
         v-model="formData.postId"
         id="postId"
-        label="Post"
-        :options="postOptions"
+        label="Post ID"
+        type="number"
+        placeholder="Enter post ID"
         required
       />
       <UserSelect
@@ -47,13 +48,11 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
+import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import BaseInput from '@/shared/components/BaseInput.vue'
 import BaseButton from '@/shared/components/BaseButton.vue'
-import BaseSelect from '@/shared/components/BaseSelect.vue'
 import UserSelect from '@/features/users/components/UserSelect.vue'
 import { commentsApi } from '../api'
-import { postsApi } from '@/features/posts/api'
 import type { CommentResponse, CreateCommentRequest, UpdateCommentRequest } from '../types'
 
 const props = defineProps<{
@@ -85,15 +84,6 @@ watch(() => props.comment, (newComment) => {
 }, { immediate: true })
 
 
-// Fetch posts (for creation)
-const { data: postsData } = useQuery({
-  queryKey: ['posts', 'all'],
-  queryFn: () => postsApi.getAdminPosts({ size: 100 }),
-  enabled: !isEdit.value
-})
-const postOptions = computed(() => {
-  return postsData.value?.data.items.map(p => ({ label: p.title, value: p.id })) || []
-})
 
 // Mutations
 const createMutation = useMutation({
@@ -103,6 +93,7 @@ const createMutation = useMutation({
   },
   onSuccess: () => {
     queryClient.invalidateQueries({ queryKey: ['comments'] })
+    queryClient.invalidateQueries({ queryKey: ['posts'] })
     emit('success')
     emit('close')
   }
@@ -112,6 +103,7 @@ const updateMutation = useMutation({
   mutationFn: ({ id, data }: { id: number, data: UpdateCommentRequest }) => commentsApi.updateComment(id, data),
   onSuccess: () => {
     queryClient.invalidateQueries({ queryKey: ['comments'] })
+    queryClient.invalidateQueries({ queryKey: ['posts'] })
     emit('success')
     emit('close')
   }

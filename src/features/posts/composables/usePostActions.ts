@@ -16,7 +16,10 @@ export function usePostActions() {
   })
 
   function openCreateForm(defaultUserId?: number) {
-    uiStore.openSidebar('Create New Post', PostForm, { defaultUserId })
+    const userId = typeof defaultUserId === 'number' ? defaultUserId : undefined
+    uiStore.openSidebar('Create New Post', PostForm, {
+      ...(userId !== undefined ? { defaultUserId: userId } : {})
+    })
   }
 
   function openEditForm(post: any) {
