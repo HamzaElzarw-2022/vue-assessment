@@ -18,11 +18,11 @@
       ></textarea>
     </div>
 
-    <BaseSelect
+    <UserSelect
       v-model="formData.userId"
       id="userId"
       label="Author"
-      :options="userOptions"
+      :default-search="post?.user?.fullName || post?.user?.username"
       required
     />
 
@@ -57,8 +57,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import BaseInput from '@/shared/components/BaseInput.vue'
 import BaseButton from '@/shared/components/BaseButton.vue'
 import BaseSelect from '@/shared/components/BaseSelect.vue'
+import UserSelect from '@/features/users/components/UserSelect.vue'
 import { postsApi } from '../api'
-import { usersApi } from '@/features/users/api'
 import { tagsApi } from '@/features/tags/api'
 import type { PostResponseAdmin, CreatePostRequest } from '../types'
 
@@ -92,14 +92,6 @@ watch(() => props.post, (newPost) => {
   }
 }, { immediate: true })
 
-// Fetch users for select
-const { data: usersData } = useQuery({
-  queryKey: ['users', 'all'],
-  queryFn: () => usersApi.getUsers({ size: 100 })
-})
-const userOptions = computed(() => {
-  return usersData.value?.data.items.map(u => ({ label: u.fullName || u.username, value: u.id })) || []
-})
 
 // Fetch tags for select
 const { data: tagsData } = useQuery({

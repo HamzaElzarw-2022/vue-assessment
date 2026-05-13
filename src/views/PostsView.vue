@@ -10,10 +10,8 @@
 
     <!-- Search & Filters -->
     <BaseFilter v-model="filters.search">
-      <BaseCombobox 
+      <UserSelect 
         v-model="filters.userId" 
-        v-model:search="userSearch"
-        :options="userOptions" 
         placeholder="Filter by user..."
         class="w-48" 
       />
@@ -112,7 +110,7 @@ import debounce from 'lodash-es/debounce'
 import AdminLayout from '@/shared/components/AdminLayout.vue'
 import BaseButton from '@/shared/components/BaseButton.vue'
 import BaseSelect from '@/shared/components/BaseSelect.vue'
-import BaseCombobox from '@/shared/components/BaseCombobox.vue'
+import UserSelect from '@/features/users/components/UserSelect.vue'
 import BaseTable, { type Column } from '@/shared/components/BaseTable.vue'
 import BaseFilter from '@/shared/components/BaseFilter.vue'
 import PostForm from '@/features/posts/components/PostForm.vue'
@@ -120,7 +118,6 @@ import PostDetail from '@/features/posts/components/PostDetail.vue'
 
 import { useUiStore } from '@/shared/stores/uiStore'
 import { postsApi } from '@/features/posts/api'
-import { usersApi } from '@/features/users/api'
 import { tagsApi } from '@/features/tags/api'
 import type { PostFilterParams } from '@/features/posts/types'
 
@@ -137,42 +134,15 @@ const filters = reactive<PostFilterParams>({
   userId: undefined
 })
 
-const userSearch = ref('')
-const activeUserSearch = ref('')
-
-const handleUserSearch = debounce(() => {
-  activeUserSearch.value = userSearch.value
-}, 300)
-
-watch(userSearch, (newVal) => {
-  handleUserSearch()
-  if (!newVal) {
-    filters.userId = undefined
-  }
-})
-
 const { data: tagsData } = useQuery({
   queryKey: ['tags'],
   queryFn: () => tagsApi.getTags()
-})
-
-const { data: usersData } = useQuery({
-  queryKey: ['users', activeUserSearch],
-  queryFn: () => usersApi.getUsers({ size: 5, search: activeUserSearch.value || undefined })
 })
 
 const tagOptions = computed(() => {
   const options = [{ label: 'All Tags', value: '' }]
   if (tagsData.value?.data) {
     tagsData.value.data.forEach((t: any) => options.push({ label: t.name, value: t.name }))
-  }
-  return options
-})
-
-const userOptions = computed(() => {
-  const options: { label: string, value: any }[] = []
-  if (usersData.value?.data?.items) {
-    usersData.value.data.items.forEach((u: any) => options.push({ label: u.fullName || u.username, value: u.id }))
   }
   return options
 })

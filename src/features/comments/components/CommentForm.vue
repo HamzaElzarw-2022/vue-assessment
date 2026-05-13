@@ -9,11 +9,11 @@
         :options="postOptions"
         required
       />
-      <BaseSelect
+      <UserSelect
         v-model="formData.userId"
         id="userId"
         label="User (Author)"
-        :options="userOptions"
+        :default-search="comment?.commenterName"
         required
       />
     </div>
@@ -51,9 +51,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import BaseInput from '@/shared/components/BaseInput.vue'
 import BaseButton from '@/shared/components/BaseButton.vue'
 import BaseSelect from '@/shared/components/BaseSelect.vue'
+import UserSelect from '@/features/users/components/UserSelect.vue'
 import { commentsApi } from '../api'
 import { postsApi } from '@/features/posts/api'
-import { usersApi } from '@/features/users/api'
 import type { CommentResponse, CreateCommentRequest, UpdateCommentRequest } from '../types'
 
 const props = defineProps<{
@@ -84,14 +84,6 @@ watch(() => props.comment, (newComment) => {
   }
 }, { immediate: true })
 
-// Fetch users
-const { data: usersData } = useQuery({
-  queryKey: ['users', 'all'],
-  queryFn: () => usersApi.getUsers({ size: 100 })
-})
-const userOptions = computed(() => {
-  return usersData.value?.data.items.map(u => ({ label: u.fullName || u.username, value: u.id })) || []
-})
 
 // Fetch posts (for creation)
 const { data: postsData } = useQuery({
