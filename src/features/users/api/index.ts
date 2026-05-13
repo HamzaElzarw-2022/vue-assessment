@@ -1,8 +1,8 @@
 import { apiClient } from '@/shared/api/client'
-import type { PageResponseUserResponse } from '../types'
+import type { PageResponseUserResponse, UserFilterParams } from '../types'
 
 export const usersApi = {
-  getUsers(params?: Record<string, any>) {
+  getUsers(params?: UserFilterParams) {
     return apiClient.get<PageResponseUserResponse>('/users', { params })
   }
 }

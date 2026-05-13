@@ -18,6 +18,14 @@
           Dashboard
         </router-link>
         <router-link 
+          to="/users" 
+          class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+          active-class="bg-indigo-600/20 text-indigo-400 font-medium"
+        >
+          <UsersIcon class="w-5 h-5" />
+          Users
+        </router-link>
+        <router-link 
           to="/posts" 
           class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
           active-class="bg-indigo-600/20 text-indigo-400 font-medium"
@@ -78,6 +86,7 @@ import {
   LayoutDashboard as LayoutDashboardIcon, 
   FileText as FileTextIcon, 
   MessageSquare as MessageSquareIcon,
+  Users as UsersIcon,
   Menu as MenuIcon,
   LogOut as LogOutIcon
 } from 'lucide-vue-next'

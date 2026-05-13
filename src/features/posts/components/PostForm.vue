@@ -19,6 +19,7 @@
     </div>
 
     <UserSelect
+      v-if="!defaultUserId"
       v-model="formData.userId"
       id="userId"
       label="Author"
@@ -64,6 +65,7 @@ import type { PostResponseAdmin, CreatePostRequest } from '../types'
 
 const props = defineProps<{
   post?: PostResponseAdmin
+  defaultUserId?: number
 }>()
 
 const emit = defineEmits(['close', 'success'])
@@ -75,7 +77,7 @@ const isEdit = computed(() => !!props.post)
 const formData = ref({
   title: '',
   body: '',
-  userId: '' as number | '',
+  userId: (props.defaultUserId || '') as number | '',
   tagIds: [] as number[],
   views: 0
 })
