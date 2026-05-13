@@ -70,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { reactive, computed } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { postsApi } from '../api'
 import { commentsApi } from '@/features/comments/api'
