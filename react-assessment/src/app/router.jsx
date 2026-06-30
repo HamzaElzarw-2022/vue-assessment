@@ -23,15 +23,15 @@ export const router = createBrowserRouter([
             element: <DashboardView />,
           },
           {
-            path: 'posts',
+            path: 'posts/*',
             element: <PostsView />,
           },
           {
-            path: 'users',
+            path: 'users/*',
             element: <UsersView />,
           },
           {
-            path: 'comments',
+            path: 'comments/*',
             element: <CommentsView />,
           },
         ],

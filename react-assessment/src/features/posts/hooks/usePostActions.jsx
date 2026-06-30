@@ -1,12 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useSidebar } from '@/shared/context/SidebarContext'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { postsApi } from '../api'
-import PostForm from '../components/PostForm'
-import PostDetail from '../components/PostDetail'
 
 export function usePostActions() {
   const queryClient = useQueryClient()
-  const { openSidebar } = useSidebar()
+  const navigate = useNavigate()
+  const location = useLocation()
 
   const deleteMutation = useMutation({
     mutationFn: (id) => postsApi.deletePost(id),
@@ -16,19 +15,34 @@ export function usePostActions() {
   })
 
   function openCreateForm(defaultUserId) {
-    const userId = typeof defaultUserId === 'number' ? defaultUserId : undefined
-    openSidebar(
-      'Create New Post',
-      <PostForm {...(userId !== undefined ? { defaultUserId: userId } : {})} />
-    )
+    if (typeof defaultUserId === 'number') {
+      // Context-aware: if we're on /users/:id, use nested path
+      navigate(`/users/${defaultUserId}/posts/new`)
+    } else {
+      navigate('/posts/new')
+    }
   }
 
   function openEditForm(post) {
-    openSidebar('Edit Post', <PostForm post={post} />)
+    // Determine context from current path
+    const basePath = location.pathname
+    if (basePath.startsWith('/users/')) {
+      // Extract userId from path: /users/:userId/...
+      const userId = basePath.split('/')[2]
+      navigate(`/users/${userId}/posts/${post.id}/edit`)
+    } else {
+      navigate(`/posts/${post.id}/edit`)
+    }
   }
 
   function openDetail(postId) {
-    openSidebar('Post Details', <PostDetail postId={postId} />)
+    const basePath = location.pathname
+    if (basePath.startsWith('/users/')) {
+      const userId = basePath.split('/')[2]
+      navigate(`/users/${userId}/posts/${postId}`)
+    } else {
+      navigate(`/posts/${postId}`)
+    }
   }
 
   function handleDelete(id) {

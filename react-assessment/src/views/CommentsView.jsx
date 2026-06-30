@@ -4,11 +4,33 @@ import { Plus } from 'lucide-react'
 
 import BaseButton from '@/shared/components/BaseButton'
 import CommentsTable from '@/features/comments/components/CommentsTable'
+import CommentForm from '@/features/comments/components/CommentForm'
+import CommentEditResolver from '@/shared/sidebar/resolvers/CommentEditResolver'
+
 import { commentsApi } from '@/features/comments/api'
 import { useCommentActions } from '@/features/comments/hooks/useCommentActions'
+import { useSidebarRoutes } from '@/shared/hooks/useSidebarRoutes'
+
+const commentsSidebarRoutes = [
+  {
+    pattern: 'new',
+    title: 'Create New Comment',
+    render: () => <CommentForm />,
+    closeUrl: () => '/comments',
+  },
+  {
+    pattern: ':commentId/edit',
+    title: 'Edit Comment',
+    render: (p) => <CommentEditResolver commentId={Number(p.commentId)} />,
+    closeUrl: () => '/comments',
+  },
+]
 
 export default function CommentsView() {
   const { openCreateForm, openEditForm, handleDelete } = useCommentActions()
+
+  // URL-synced sidebar
+  useSidebarRoutes('/comments', commentsSidebarRoutes)
 
   const [filters, setFilters] = useState({
     page: 0,

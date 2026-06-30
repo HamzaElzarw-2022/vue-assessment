@@ -1,17 +1,55 @@
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useSidebar } from '@/shared/context/SidebarContext'
 
-export default function RightSidebar() {
-  const { isOpen, stack, depth, title, currentEntry, closeSidebar, closeAllSidebars, navigateTo } = useSidebar()
+export default function RightSidebar({ basePath }) {
+  const navigate = useNavigate()
+  const { isOpen, stack, depth, title, currentEntry } = useSidebar()
 
   if (!isOpen) return null
+
+  function handleBack() {
+    // Navigate to the current entry's closeUrl (pops one level)
+    const current = stack[stack.length - 1]
+    if (current?.closeUrl) {
+      navigate(current.closeUrl)
+    } else {
+      navigate(-1)
+    }
+  }
+
+  function handleCloseAll() {
+    // Navigate to the base page path (closes all sidebars)
+    if (basePath) {
+      navigate(basePath)
+    } else {
+      // Fallback: use the deepest entry's first-level closeUrl or go back
+      const firstEntry = stack[0]
+      if (firstEntry?.closeUrl) {
+        navigate(firstEntry.closeUrl)
+      } else {
+        navigate(-1)
+      }
+    }
+  }
+
+  function handleBreadcrumbClick(index) {
+    // Navigate to the close URL of the entry AFTER the clicked one
+    // (this truncates the stack to include only up to the clicked entry)
+    if (index < stack.length - 1) {
+      const nextEntry = stack[index + 1]
+      if (nextEntry?.closeUrl) {
+        navigate(nextEntry.closeUrl)
+      }
+    }
+  }
 
   return (
     <>
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/50 z-40 transition-opacity animate-fade-in"
-        onClick={closeAllSidebars}
+        onClick={handleCloseAll}
       />
 
       {/* Sidebar Panel */}
@@ -29,7 +67,7 @@ export default function RightSidebar() {
                         ? 'text-slate-600 font-medium'
                         : 'hover:text-indigo-500 cursor-pointer transition-colors'
                     }
-                    onClick={() => index < stack.length - 1 && navigateTo(index)}
+                    onClick={() => handleBreadcrumbClick(index)}
                   >
                     {entry.title}
                   </span>
@@ -46,7 +84,7 @@ export default function RightSidebar() {
             <div className="flex items-center gap-2 min-w-0">
               {depth > 1 && (
                 <button
-                  onClick={closeSidebar}
+                  onClick={handleBack}
                   className="flex-shrink-0 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 p-1.5 rounded-lg transition-colors cursor-pointer"
                   title="Go back"
                 >
@@ -56,7 +94,7 @@ export default function RightSidebar() {
               <h2 className="text-lg font-semibold text-gray-800 truncate">{title}</h2>
             </div>
             <button
-              onClick={closeAllSidebars}
+              onClick={handleCloseAll}
               className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors p-1.5 rounded-full hover:bg-gray-200 cursor-pointer"
               title="Close"
             >

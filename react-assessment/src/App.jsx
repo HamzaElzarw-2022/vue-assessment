@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
   Layers,
   LayoutDashboard,
@@ -20,12 +20,16 @@ const navItems = [
 
 export default function App() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { logout } = useAuth()
 
   function handleLogout() {
     logout()
     navigate('/login')
   }
+
+  // Extract the base path (e.g., /posts, /users, /comments) for sidebar close navigation
+  const basePath = '/' + (location.pathname.split('/')[1] || '')
 
   return (
     <div className="min-h-screen bg-gray-50 flex font-sans">
@@ -96,7 +100,7 @@ export default function App() {
       </main>
 
       {/* Global Right Sidebar */}
-      <RightSidebar />
+      <RightSidebar basePath={basePath} />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useSidebar } from '@/shared/context/SidebarContext'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { commentsApi } from '../api'
 import BaseInput from '@/shared/components/BaseInput'
 import BaseButton from '@/shared/components/BaseButton'
@@ -9,7 +9,8 @@ import UserSelect from '@/features/users/components/UserSelect'
 export default function CommentForm({ comment, defaultPostId }) {
   const isEditMode = Boolean(comment)
   const queryClient = useQueryClient()
-  const { closeSidebar } = useSidebar()
+  const navigate = useNavigate()
+  const location = useLocation()
 
   const [formData, setFormData] = useState({
     postId: comment?.postId ?? defaultPostId ?? '',
@@ -23,6 +24,26 @@ export default function CommentForm({ comment, defaultPostId }) {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
+  // Compute the parent URL for close/cancel navigation
+  function getCloseUrl() {
+    const path = location.pathname
+    if (path.endsWith('/new')) {
+      // /posts/5/comments/new → /posts/5
+      // /comments/new → /comments
+      return path.replace(/\/comments\/new$/, '').replace(/\/new$/, '') || '/'
+    }
+    if (path.match(/\/comments\/\d+\/edit$/)) {
+      // /posts/5/comments/3/edit → /posts/5
+      // /comments/3/edit → /comments
+      return path.replace(/\/comments\/\d+\/edit$/, '') || '/comments'
+    }
+    return path.split('/').slice(0, -1).join('/') || '/'
+  }
+
+  function handleClose() {
+    navigate(getCloseUrl())
+  }
+
   const createMutation = useMutation({
     mutationFn: (data) => {
       const { postId, ...req } = data
@@ -31,7 +52,7 @@ export default function CommentForm({ comment, defaultPostId }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments'] })
       queryClient.invalidateQueries({ queryKey: ['posts'] })
-      closeSidebar()
+      handleClose()
     },
   })
 
@@ -40,7 +61,7 @@ export default function CommentForm({ comment, defaultPostId }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments'] })
       queryClient.invalidateQueries({ queryKey: ['posts'] })
-      closeSidebar()
+      handleClose()
     },
   })
 
@@ -118,7 +139,7 @@ export default function CommentForm({ comment, defaultPostId }) {
       </div>
 
       <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-        <BaseButton type="button" variant="outline" onClick={closeSidebar}>
+        <BaseButton type="button" variant="outline" onClick={handleClose}>
           Cancel
         </BaseButton>
         <BaseButton type="submit" disabled={isPending}>

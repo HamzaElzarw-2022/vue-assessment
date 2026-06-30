@@ -1,11 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useSidebar } from '@/shared/context/SidebarContext'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { commentsApi } from '../api'
-import CommentForm from '../components/CommentForm'
 
 export function useCommentActions() {
   const queryClient = useQueryClient()
-  const { openSidebar } = useSidebar()
+  const navigate = useNavigate()
+  const location = useLocation()
 
   const deleteMutation = useMutation({
     mutationFn: (id) => commentsApi.deleteComment(id),
@@ -16,17 +16,28 @@ export function useCommentActions() {
   })
 
   function openCreateForm(defaultPostId) {
-    openSidebar(
-      'Create New Comment',
-      <CommentForm defaultPostId={defaultPostId} />
-    )
+    if (typeof defaultPostId === 'number') {
+      // Context-aware: navigate within the current page context
+      const basePath = location.pathname
+      if (basePath.startsWith('/users/')) {
+        // Already in a nested user context, find postId path
+        navigate(`${basePath}/comments/new`.replace(/\/+/g, '/'))
+      } else {
+        navigate(`/posts/${defaultPostId}/comments/new`)
+      }
+    } else {
+      navigate('/comments/new')
+    }
   }
 
   function openEditForm(comment) {
-    openSidebar(
-      'Edit Comment',
-      <CommentForm comment={comment} />
-    )
+    const basePath = location.pathname
+    if (basePath.includes(`/posts/${comment.postId}`)) {
+      // We're viewing this post's comments, keep the context
+      navigate(`${basePath}/comments/${comment.id}/edit`.replace(/\/+/g, '/'))
+    } else {
+      navigate(`/comments/${comment.id}/edit`)
+    }
   }
 
   function handleDelete(id) {

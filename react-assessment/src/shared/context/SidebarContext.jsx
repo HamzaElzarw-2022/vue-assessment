@@ -3,7 +3,7 @@ import { createContext, useContext, useReducer, useCallback, useMemo } from 'rea
 const SidebarContext = createContext(null)
 
 const initialState = {
-  stack: [], // Array of { title, content (React element), props }
+  stack: [], // Array of { title, content (React element), closeUrl }
 }
 
 function sidebarReducer(state, action) {
@@ -16,6 +16,8 @@ function sidebarReducer(state, action) {
       return { ...state, stack: [] }
     case 'NAVIGATE_TO':
       return { ...state, stack: state.stack.slice(0, action.payload + 1) }
+    case 'REPLACE_STACK':
+      return { ...state, stack: action.payload }
     default:
       return state
   }
@@ -24,8 +26,8 @@ function sidebarReducer(state, action) {
 export function SidebarProvider({ children }) {
   const [state, dispatch] = useReducer(sidebarReducer, initialState)
 
-  const openSidebar = useCallback((title, content) => {
-    dispatch({ type: 'PUSH', payload: { title, content } })
+  const openSidebar = useCallback((title, content, closeUrl) => {
+    dispatch({ type: 'PUSH', payload: { title, content, closeUrl } })
   }, [])
 
   const closeSidebar = useCallback(() => {
@@ -40,6 +42,10 @@ export function SidebarProvider({ children }) {
     dispatch({ type: 'NAVIGATE_TO', payload: index })
   }, [])
 
+  const replaceStack = useCallback((entries) => {
+    dispatch({ type: 'REPLACE_STACK', payload: entries })
+  }, [])
+
   const value = useMemo(() => ({
     stack: state.stack,
     isOpen: state.stack.length > 0,
@@ -50,7 +56,8 @@ export function SidebarProvider({ children }) {
     closeSidebar,
     closeAllSidebars,
     navigateTo,
-  }), [state.stack, openSidebar, closeSidebar, closeAllSidebars, navigateTo])
+    replaceStack,
+  }), [state.stack, openSidebar, closeSidebar, closeAllSidebars, navigateTo, replaceStack])
 
   return (
     <SidebarContext.Provider value={value}>

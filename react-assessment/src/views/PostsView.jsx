@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 
 import BaseButton from '@/shared/components/BaseButton'
@@ -8,9 +9,16 @@ import BaseFilter from '@/shared/components/BaseFilter'
 import UserSelect from '@/features/users/components/UserSelect'
 import PostsTable from '@/features/posts/components/PostsTable'
 
+import PostDetail from '@/features/posts/components/PostDetail'
+import PostForm from '@/features/posts/components/PostForm'
+import CommentForm from '@/features/comments/components/CommentForm'
+import PostEditResolver from '@/shared/sidebar/resolvers/PostEditResolver'
+import CommentEditResolver from '@/shared/sidebar/resolvers/CommentEditResolver'
+
 import { postsApi } from '@/features/posts/api'
 import { tagsApi } from '@/features/tags/api'
 import { usePostActions } from '@/features/posts/hooks/usePostActions'
+import { useSidebarRoutes } from '@/shared/hooks/useSidebarRoutes'
 
 const sortOptions = [
   { label: 'Sort by ID', value: 'id' },
@@ -23,28 +31,97 @@ const sortDirOptions = [
   { label: 'Descending', value: 'descending' },
 ]
 
+const postsSidebarRoutes = [
+  {
+    pattern: 'new',
+    title: 'Create New Post',
+    render: () => <PostForm />,
+    closeUrl: () => '/posts',
+  },
+  {
+    pattern: ':postId',
+    title: 'Post Details',
+    render: (p) => <PostDetail postId={Number(p.postId)} />,
+    closeUrl: () => '/posts',
+  },
+  {
+    pattern: ':postId/edit',
+    title: 'Edit Post',
+    render: (p) => <PostEditResolver postId={Number(p.postId)} />,
+    closeUrl: (p) => `/posts/${p.postId}`,
+  },
+  {
+    pattern: ':postId/comments/new',
+    title: ['Post Details', 'Create Comment'],
+    render: (p) => [
+      <PostDetail key="detail" postId={Number(p.postId)} />,
+      <CommentForm key="form" defaultPostId={Number(p.postId)} />,
+    ],
+    closeUrl: (p) => `/posts/${p.postId}`,
+  },
+  {
+    pattern: ':postId/comments/:commentId/edit',
+    title: ['Post Details', 'Edit Comment'],
+    render: (p) => [
+      <PostDetail key="detail" postId={Number(p.postId)} />,
+      <CommentEditResolver key="form" commentId={Number(p.commentId)} />,
+    ],
+    closeUrl: (p) => `/posts/${p.postId}`,
+  },
+]
+
 export default function PostsView() {
   const { openCreateForm, openEditForm, openDetail, handleDelete } = usePostActions()
 
-  const [filters, setFilters] = useState({
-    page: 0,
-    size: 10,
-    search: '',
-    sortBy: 'id',
-    sortDir: 'ascending',
-    tag: '',
-    userId: undefined,
-  })
+  // URL-synced sidebar
+  useSidebarRoutes('/posts', postsSidebarRoutes)
 
-  // Reset page when filters change (except page itself)
-  const [prevFilterKey, setPrevFilterKey] = useState('')
-  const filterKey = `${filters.search}-${filters.size}-${filters.sortBy}-${filters.sortDir}-${filters.tag}-${filters.userId}`
-  useEffect(() => {
-    if (prevFilterKey && prevFilterKey !== filterKey) {
-      setFilters((f) => ({ ...f, page: 0 }))
-    }
-    setPrevFilterKey(filterKey)
-  }, [filterKey, prevFilterKey])
+  // URL-synced filters via search params
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const filters = useMemo(() => ({
+    page: Number(searchParams.get('page') || 0),
+    size: Number(searchParams.get('size') || 10),
+    search: searchParams.get('search') || '',
+    sortBy: searchParams.get('sortBy') || 'id',
+    sortDir: searchParams.get('sortDir') || 'ascending',
+    tag: searchParams.get('tag') || '',
+    userId: searchParams.get('userId') ? Number(searchParams.get('userId')) : undefined,
+  }), [searchParams])
+
+  function updateFilter(key, value) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      // Reset page when non-page filters change
+      if (key !== 'page') {
+        next.delete('page')
+      }
+      if (value === '' || value === undefined || value === null) {
+        next.delete(key)
+      } else {
+        next.set(key, String(value))
+      }
+      // Remove defaults to keep URL clean
+      if (next.get('size') === '10') next.delete('size')
+      if (next.get('sortBy') === 'id') next.delete('sortBy')
+      if (next.get('sortDir') === 'ascending') next.delete('sortDir')
+      if (next.get('page') === '0') next.delete('page')
+      return next
+    })
+  }
+
+  function handleSizeChange(size) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.delete('page')
+      if (size === 10) {
+        next.delete('size')
+      } else {
+        next.set('size', String(size))
+      }
+      return next
+    })
+  }
 
   const { data: tagsData } = useQuery({
     queryKey: ['tags'],
@@ -69,10 +146,6 @@ export default function PostsView() {
         userId: filters.userId || undefined,
       }),
   })
-
-  function updateFilter(key, value) {
-    setFilters((f) => ({ ...f, [key]: value }))
-  }
 
   return (
     <>
@@ -127,9 +200,7 @@ export default function PostsView() {
             totalPages: postsData.data.totalPages,
           }}
           onPageChange={(p) => updateFilter('page', p)}
-          onSizeChange={(s) => {
-            setFilters((f) => ({ ...f, size: s, page: 0 }))
-          }}
+          onSizeChange={handleSizeChange}
           onEdit={openEditForm}
           onDelete={handleDelete}
           onView={openDetail}

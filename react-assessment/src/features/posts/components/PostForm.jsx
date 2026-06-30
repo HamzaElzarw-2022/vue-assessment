@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useSidebar } from '@/shared/context/SidebarContext'
+import { useNavigate, useLocation } from 'react-router-dom'
 import BaseInput from '@/shared/components/BaseInput'
 import BaseButton from '@/shared/components/BaseButton'
 import BaseSelect from '@/shared/components/BaseSelect'
@@ -10,7 +10,8 @@ import { tagsApi } from '@/features/tags/api'
 
 export default function PostForm({ post, defaultUserId }) {
   const queryClient = useQueryClient()
-  const { closeSidebar } = useSidebar()
+  const navigate = useNavigate()
+  const location = useLocation()
 
   const isEdit = !!post
 
@@ -46,12 +47,31 @@ export default function PostForm({ post, defaultUserId }) {
     )
   }, [tagsData])
 
+  // Compute the parent URL for close/cancel navigation
+  function getCloseUrl() {
+    const path = location.pathname
+    if (path.endsWith('/new')) {
+      // /posts/new → /posts, /users/3/posts/new → /users/3
+      return path.replace(/\/posts\/new$/, '').replace(/\/new$/, '') || '/'
+    }
+    if (path.endsWith('/edit')) {
+      // /posts/5/edit → /posts/5, /users/3/posts/5/edit → /users/3/posts/5
+      return path.replace(/\/edit$/, '')
+    }
+    // Fallback: go up one level
+    return path.split('/').slice(0, -1).join('/') || '/'
+  }
+
+  function handleClose() {
+    navigate(getCloseUrl())
+  }
+
   // Mutations
   const createMutation = useMutation({
     mutationFn: (data) => postsApi.createPost(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts'] })
-      closeSidebar()
+      handleClose()
     }
   })
 
@@ -59,7 +79,7 @@ export default function PostForm({ post, defaultUserId }) {
     mutationFn: ({ id, data }) => postsApi.updatePost(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts'] })
-      closeSidebar()
+      handleClose()
     }
   })
 
@@ -152,7 +172,7 @@ export default function PostForm({ post, defaultUserId }) {
       />
 
       <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-        <BaseButton type="button" variant="outline" onClick={closeSidebar}>
+        <BaseButton type="button" variant="outline" onClick={handleClose}>
           Cancel
         </BaseButton>
         <BaseButton type="submit" disabled={isPending}>
